@@ -21,7 +21,18 @@ class CompaniesControllerTest < ApplicationSystemTestCase
     assert_text @company.name
     assert_text @company.phone
     assert_text @company.email
-    assert_text "City, State"
+  end
+
+  test "Show with state and city" do
+    @company.update(zip_code: 93001)
+    visit company_path(@company)
+
+    assert_text @company.name
+    assert_text @company.phone
+    assert_text @company.email
+
+    location = ZipCodes.identify(@company.zip_code)
+    assert_text "#{location.fetch(:city)}, #{location.fetch(:state_code)}"
   end
 
   test "Update" do
@@ -36,11 +47,14 @@ class CompaniesControllerTest < ApplicationSystemTestCase
     assert_text "Changes Saved"
 
     @company.reload
+    location = ZipCodes.identify(@company.zip_code)
     assert_equal "Updated Test Company", @company.name
     assert_equal "93009", @company.zip_code
+    assert_equal location.fetch(:city), @company.city
+    assert_equal location.fetch(:state_code), @company.state
   end
 
-  test "Create" do
+  test "Create with invalid params" do
     visit new_company_path
 
     within("form#new_company") do
@@ -48,6 +62,20 @@ class CompaniesControllerTest < ApplicationSystemTestCase
       fill_in("company_zip_code", with: "28173")
       fill_in("company_phone", with: "5553335555")
       fill_in("company_email", with: "new_test_company@test.com")
+      click_button "Create Company"
+    end
+
+    assert_text "Email should only be a @getmainstreet.com domain"
+  end
+
+  test "Create with valid params" do
+    visit new_company_path
+
+    within("form#new_company") do
+      fill_in("company_name", with: "New Test Company")
+      fill_in("company_zip_code", with: "28173")
+      fill_in("company_phone", with: "5553335555")
+      fill_in("company_email", with: "new_test_company@getmainstreet.com")
       click_button "Create Company"
     end
 

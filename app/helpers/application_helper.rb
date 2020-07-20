@@ -8,5 +8,9 @@ module ApplicationHelper
       notice: "alert-info"
     }.stringify_keys[flash_type.to_s] || flash_type.to_s
   end
-  
+
+  def address
+    @company&.attributes&.values_at("city", "state").compact.join(', ').html_safe
+  end
+
 end
